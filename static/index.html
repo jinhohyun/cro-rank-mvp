@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRO-Rank (크로랭크) 🔬 - 대한민국 비임상 & 임상 CRO 팩트 랭킹 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+    .card-flipper { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen custom-scrollbar flex flex-col justify-between">
+
+  <!-- Navigation / Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center font-bold text-2xl shadow-lg shadow-cyan-500/25 border border-cyan-400/30">
+          🔬
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent tracking-tight">
+              CRO-RANK
+            </h1>
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm shadow-cyan-500/10">
+              v1.0 Live
+            </span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hidden sm:inline-block">
+              ● 20개 사 실시간 검증
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium">대한민국 비임상 GLP & 임상 CRO 팩트 랭킹 & B2B 견적 매칭</p>
+        </div>
+      </div>
+
+      <!-- Action & Links -->
+      <div class="flex items-center space-x-3">
+        <button onclick="openGlobalRfpModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition-all transform active:scale-95 flex items-center gap-1.5 border border-cyan-300/30">
+          <span>📩</span> 원스톱 RFP 견적 의뢰
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero KPI Statistics Banner -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2 w-full">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur shadow-sm">
+        <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+          <span>공식 등록 CRO</span>
+          <span class="text-cyan-400 text-base">🏢</span>
+        </div>
+        <div class="text-2xl font-black text-slate-100 flex items-baseline gap-1">
+          <span id="stat-total">20</span>
+          <span class="text-xs font-normal text-slate-400">개 기관</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">임상 13개 / 비임상 7개</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur shadow-sm">
+        <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+          <span>평균 CRO-Score</span>
+          <span class="text-amber-400 text-base">⭐</span>
+        </div>
+        <div class="text-2xl font-black text-amber-400 flex items-baseline gap-1">
+          <span id="stat-avg">88.4</span>
+          <span class="text-xs font-normal text-slate-400">/ 100점</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">6축 가중 정량평가 지수</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur shadow-sm">
+        <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+          <span>Top-Tier (S+ 등급)</span>
+          <span class="text-emerald-400 text-base">🏆</span>
+        </div>
+        <div class="text-2xl font-black text-emerald-400 flex items-baseline gap-1">
+          <span id="stat-splus">3</span>
+          <span class="text-xs font-normal text-slate-400">곳 선정</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">상위 5% 최우수 풀서비스</div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur shadow-sm">
+        <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+          <span>누적 RFP 견적 문의</span>
+          <span class="text-indigo-400 text-base">⚡</span>
+        </div>
+        <div class="text-2xl font-black text-indigo-400 flex items-baseline gap-1">
+          <span id="stat-rfps">0</span>
+          <span class="text-xs font-normal text-slate-400">건 연결</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">24시간 내 매칭 보장</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter, Search & Sort Toolbar -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full">
+    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3.5">
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+        
+        <!-- Category Tabs -->
+        <div class="flex items-center space-x-1.5 bg-slate-950/70 p-1.5 rounded-xl border border-slate-800 overflow-x-auto">
+          <button onclick="setFilter('cro_type', '')" id="tab-all" class="filter-tab px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-slate-800 shadow-sm transition">전체 CRO</button>
+          <button onclick="setFilter('cro_type', 'clinical')" id="tab-clinical" class="filter-tab px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">🏥 임상 CRO</button>
+          <button onclick="setFilter('cro_type', 'nonclinical')" id="tab-nonclinical" class="filter-tab px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">🧪 비임상 GLP</button>
+          <button onclick="setFilter('cro_type', 'both')" id="tab-both" class="filter-tab px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">⚡ 원스톱 (비임상+임상)</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative flex-1 max-w-md">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            🔍
+          </div>
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="handleSearch(this.value)" 
+            placeholder="CRO 기관명, 서비스 키워드 (예: GLP, Phase, FDA, 유전독성) 검색..." 
+            class="w-full pl-10 pr-4 py-2 bg-slate-950/90 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/40 transition"
+          >
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white text-xs">
+            ✕
+          </button>
+        </div>
+
+        <!-- Sort Select & Tier Filter -->
+        <div class="flex items-center space-x-2">
+          <select id="tierSelect" onchange="setFilter('tier', this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="">모든 등급 (All Tiers)</option>
+            <option value="S+">S+ 등급만 (Top 5%)</option>
+            <option value="S">S 등급 이상</option>
+            <option value="A">A 등급</option>
+            <option value="B">B 등급</option>
+          </select>
+
+          <select id="sortSelect" onchange="setSort(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="cro_score_desc">🏆 종합 점수 높은순</option>
+            <option value="staff_desc">👥 임직원 많은순</option>
+            <option value="turnover_asc">🛡️ 낮은 퇴사율순 (안정성)</option>
+            <option value="reputation_desc">🌟 업계 평판 높은순</option>
+            <option value="project_desc">📊 수주 과제 많은순</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Card Grid -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex-1 w-full space-y-6">
+    <div class="flex items-center justify-between text-xs text-slate-400">
+      <div id="resultCountText" class="font-semibold text-slate-300">
+        조회된 CRO: <span id="displayCount" class="text-cyan-400 font-bold">20</span>개 기관
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span> 앞면: 팩트 지표</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 inline-block"></span> 뒷면: 6축 레이더 차트</span>
+      </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div id="croGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Injected by app.js -->
+    </div>
+  </main>
+
+  <!-- Compare Tray Floating Bar (하단 고정 비교함) -->
+  <div id="compareTray" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 hidden transition-all duration-300 w-full max-w-2xl px-4">
+    <div class="bg-slate-900/95 border border-cyan-500/40 backdrop-blur-xl shadow-2xl shadow-cyan-500/20 rounded-2xl p-3.5 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 overflow-x-auto py-1" id="compareChips">
+        <!-- Selected CRO Badges -->
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <button onclick="clearCompare()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+          초기화
+        </button>
+        <button onclick="openCompareModal()" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/25 transition">
+          ⚖️ 1:1 레이더 비교 분석 (<span id="compareCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-6 shadow-2xl relative">
+      <button onclick="closeModal('detailModal')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+        ✕
+      </button>
+      <div id="detailModalContent">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- RFP Modal (견적 의뢰 모달) -->
+  <div id="rfpModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-6 sm:p-8 space-y-5 shadow-2xl shadow-cyan-500/10 relative">
+      <button onclick="closeModal('rfpModal')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+        ✕
+      </button>
+      
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📩</span>
+          <h3 class="text-xl font-black text-slate-100">원스톱 B2B RFP 견적 의뢰</h3>
+        </div>
+        <p class="text-xs text-slate-400">
+          대상 기관: <span id="rfpTargetName" class="text-cyan-400 font-bold">씨앤알리서치</span>
+        </p>
+      </div>
+
+      <form id="rfpForm" onsubmit="handleRfpSubmit(event)" class="space-y-4">
+        <input type="hidden" id="rfpCroId" value="1">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">의뢰 기업명 *</label>
+            <input type="text" id="rfpCompany" required placeholder="(주)바이오젠코리아" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">담당자 성함 *</label>
+            <input type="text" id="rfpName" required placeholder="홍길동 팀장" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">담당자 이메일 *</label>
+            <input type="email" id="rfpEmail" required placeholder="contact@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">연락처</label>
+            <input type="text" id="rfpPhone" placeholder="010-1234-5678" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">요청 서비스 *</label>
+            <select id="rfpService" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+              <option value="비임상 GLP 독성/안전성">비임상 GLP 독성/안전성약리</option>
+              <option value="비임상 질환모델 효능평가">비임상 질환모델 효능평가</option>
+              <option value="임상 Phase I 시험">임상 Phase I (초기 안전성/PK)</option>
+              <option value="임상 Phase II/III 허가용">임상 Phase II/III (허가용 다국가)</option>
+              <option value="데이터관리 & 통계 (DM/STAT)">데이터관리 & 바이오통계 (DM/STAT)</option>
+              <option value="식약처 / FDA 인허가(RA)">식약처 / FDA 인허가(RA) 컨설팅</option>
+              <option value="의료기기 임상 및 인허가">의료기기 임상 및 인허가</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">타겟 적응증 / 질환</label>
+            <input type="text" id="rfpDisease" placeholder="예: 항암제(고형암), 중추신경계(CNS)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">예상 예산 규모</label>
+            <select id="rfpBudget" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+              <option value="협의 예정">협의 예정</option>
+              <option value="1억 원 미만">1억 원 미만 (소규모/파일럿)</option>
+              <option value="1억 ~ 3억 원">1억 ~ 3억 원</option>
+              <option value="3억 ~ 10억 원">3억 ~ 10억 원</option>
+              <option value="10억 원 이상">10억 원 이상 (대형 과제)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">착수 희망 시기</label>
+            <input type="text" id="rfpStartDate" placeholder="예: 2027년 1분기 이내" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">상세 요구사항 / 파이프라인 개요</label>
+          <textarea id="rfpRequirements" rows="3" placeholder="개발 중인 후보물질의 특성, 목표 시험 항목, 선호 조건 등을 자유롭게 기재해 주세요." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-cyan-500 custom-scrollbar"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/25 transition">
+          🚀 견적 요청서 발송하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Multi Compare Modal -->
+  <div id="compareModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-6 space-y-6 shadow-2xl relative">
+      <button onclick="closeModal('compareModal')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+        ✕
+      </button>
+      <div class="space-y-1">
+        <h3 class="text-xl font-black text-slate-100 flex items-center gap-2">
+          <span>⚖️</span> 다자간 CRO 팩트 & 레이더 다각 비교
+        </h3>
+        <p class="text-xs text-slate-400">선택한 기관의 6축 역량 밸런스와 핵심 스펙을 한 화면에서 비교합니다.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+        <!-- Radar Chart Container -->
+        <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-center min-h-[300px]">
+          <h4 class="text-xs font-bold text-slate-400 mb-2">6축 다각 레이더 차트</h4>
+          <div class="w-full max-w-sm h-72">
+            <canvas id="multiRadarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto" id="compareTableContainer">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-5 right-5 z-50 hidden transform transition-all duration-300">
+    <div class="bg-slate-900 border border-cyan-500/50 text-white px-5 py-3 rounded-2xl shadow-xl shadow-cyan-500/20 text-xs font-semibold flex items-center gap-2.5">
+      <span id="toastIcon">✓</span>
+      <span id="toastMessage">알림 메시지</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <p class="font-medium text-slate-400">CRO-Rank 🔬 대한민국 비임상 GLP & 임상시험수탁기관 팩트 플랫폼</p>
+      <p class="text-[11px] text-slate-600">데이터 소스: DART 전자공시시스템, 식품의약품안전처 의약품안전나라, 한국신약개발연구조합 공시자료</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
