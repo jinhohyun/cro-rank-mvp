@@ -1,5 +1,13 @@
 # [cro_rank_mvp] 릴리즈 노트 (Release Notes)
 
+## [v1.1.1] - 2026-11-18
+### 🐛 Fixed (버그 수정 및 Vercel 배포 안정화)
+- **Vercel Rewrite 404 해결**: Vercel 라우팅 경로 왜곡을 방지하기 위해 `vercel.json`의 불필요한 rewrites를 제거하고, FastAPI에 듀얼 프리픽스 APIRouter (`/stats` 및 `/api/stats` 동시 수용) 적용
+- **프론트엔드 통신 복구**: `static/app.js` 및 `public/app.js`에 자동 폴백을 갖춘 `apiFetch` 클라이언트 도입으로 데이터 로딩 실패 결함 완치
+- **서버리스 SQLite 자가 치유**: Vercel의 `/tmp` 디렉터리에 SQLite DB를 자동 프로비저닝하고, 번들 누락 시에도 `seed_backup.py`로부터 20개 사 시드를 100% 자동 복구하도록 엔진 보강
+
+---
+
 ## [v1.1.0] - 2026-11-17
 ### 🚀 Added (신규 기능)
 - **20개 대표 CRO 시드 데이터셋 전면 확장**: 국내 상장사, 비상장 전문기관, 글로벌 Top 5 한국법인 팩트 데이터 적재 (`seed_data.json`)
