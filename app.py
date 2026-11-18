@@ -1,9 +1,9 @@
-"""FastAPI Web Server for CRO-Rank MVP"""
+"""FastAPI Web Server for CRO-Rank MVP (Dual-Prefix Vercel Serverless Ready)"""
 
 import json
 from typing import Optional
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -12,15 +12,19 @@ from database import get_db, init_db
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+PUBLIC_DIR = BASE_DIR / "public"
 
 app = FastAPI(
     title="CRO-Rank API 🔬",
     description="대한민국 비임상 GLP & 임상 CRO 팩트 랭킹 및 B2B 견적 매칭 플랫폼",
-    version="1.0.0"
+    version="1.1.0"
 )
 
-STATIC_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# Mount static files for local execution
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+router = APIRouter()
 
 
 class RFPRequest(BaseModel):
@@ -47,18 +51,34 @@ class ReviewRequest(BaseModel):
 
 @app.on_event("startup")
 def startup():
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Startup DB init notice: {e}")
 
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return index_path.read_text(encoding="utf-8")
+    for p in [PUBLIC_DIR / "index.html", STATIC_DIR / "index.html"]:
+        if p.exists():
+            return p.read_text(encoding="utf-8")
     return "<h1>CRO-Rank API Live</h1>"
 
 
-@app.get("/api/stats")
+@router.get("/ping")
+def ping(request: Request):
+    """Health check endpoint returning DB count and request path info."""
+    with get_db() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM cros").fetchone()[0]
+    return {
+        "status": "ok",
+        "total_cros": count,
+        "path": request.url.path,
+        "message": "CRO-Rank API is live and operational!"
+    }
+
+
+@router.get("/stats")
 def get_platform_stats():
     """Retrieve platform-wide summary statistics."""
     with get_db() as conn:
@@ -80,7 +100,7 @@ def get_platform_stats():
     }
 
 
-@app.get("/api/cros")
+@router.get("/cros")
 def get_cros(
     cro_type: Optional[str] = Query(None, description="Filter by type: 'clinical', 'nonclinical', 'both'"),
     tier: Optional[str] = Query(None, description="Filter by tier: 'S+', 'S', 'A', 'B'"),
@@ -111,7 +131,6 @@ def get_cros(
             sql += " AND (name LIKE ? OR name_en LIKE ? OR covered_services LIKE ? OR category_tags LIKE ? OR location LIKE ?)"
             params.extend([q, q, q, q, q])
 
-        # Sort mapping
         sort_map = {
             "cro_score_desc": "cro_score DESC, reputation_score DESC",
             "staff_desc": "staff_count DESC",
@@ -134,7 +153,7 @@ def get_cros(
     return results
 
 
-@app.get("/api/cros/{cro_id}")
+@router.get("/cros/{cro_id}")
 def get_cro_detail(cro_id: int):
     """Retrieve detailed profile of a specific CRO with auto-incremented view count."""
     with get_db() as conn:
@@ -146,7 +165,6 @@ def get_cro_detail(cro_id: int):
         d = dict(row)
         d["stats"] = json.loads(d["stats_json"]) if d.get("stats_json") else {}
 
-        # Fetch reviews
         rev_rows = cur.execute(
             "SELECT * FROM cro_reviews WHERE cro_id = ? ORDER BY id DESC LIMIT 10", (cro_id,)
         ).fetchall()
@@ -155,7 +173,7 @@ def get_cro_detail(cro_id: int):
     return d
 
 
-@app.get("/api/cros/{cro_id}/radar")
+@router.get("/cros/{cro_id}/radar")
 def get_cro_radar(cro_id: int):
     """Get standardized Chart.js Radar payload for a single CRO."""
     with get_db() as conn:
@@ -187,7 +205,7 @@ def get_cro_radar(cro_id: int):
     }
 
 
-@app.post("/api/rfp")
+@router.post("/rfp")
 def submit_rfp(rfp: RFPRequest):
     """Submit B2B Request For Proposal (RFP) quotation lead."""
     with get_db() as conn:
@@ -216,7 +234,7 @@ def submit_rfp(rfp: RFPRequest):
     }
 
 
-@app.get("/api/compare")
+@router.get("/compare")
 def compare_cros(ids: str = Query(..., description="Comma-separated CRO IDs, e.g. '1,2,5'")):
     """Multi-institution comparison endpoint."""
     id_list = []
@@ -278,7 +296,7 @@ def compare_cros(ids: str = Query(..., description="Comma-separated CRO IDs, e.g
     }
 
 
-@app.post("/api/reviews")
+@router.post("/reviews")
 def add_review(rev: ReviewRequest):
     """Add a verified client review for a CRO."""
     with get_db() as conn:
@@ -291,3 +309,8 @@ def add_review(rev: ReviewRequest):
             rev.cro_id, rev.reviewer_company_type, rev.rating_communication, rev.rating_schedule, rev.rating_quality, rev.review_comment
         ))
     return {"status": "success", "message": "리뷰가 등록되었습니다."}
+
+
+# Mount router with and without /api prefix to support both direct and rewritten routes seamlessly
+app.include_router(router, prefix="/api")
+app.include_router(router)

@@ -1,8 +1,13 @@
 import sys
 from pathlib import Path
 
-# Add project root to sys.path so app, database, scoring can be imported
+# Add project root and current dir to sys.path
 ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR))
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+CURRENT_DIR = Path(__file__).resolve().parent
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(0, str(CURRENT_DIR))
 
 from app import app
