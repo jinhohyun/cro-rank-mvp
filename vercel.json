@@ -3,11 +3,5 @@
     "api/index.py": {
       "includeFiles": "cro_rank.db,seed_data.json,seed_backup.py,scoring.py,database.py,app.py"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    }
-  ]
+  }
 }

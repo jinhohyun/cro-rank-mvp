@@ -45,6 +45,30 @@ const TIER_STYLES = {
   }
 };
 
+// Smart API Fetch with automatic dual-routing fallback (/stats <-> /api/stats)
+async function apiFetch(endpoint, options = {}) {
+  const cleanPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  // Prefer /stats, /cros (proven working on Vercel Edge)
+  const primary = cleanPath.startsWith('/api/') ? cleanPath.replace('/api/', '/') : cleanPath;
+  const alternate = cleanPath.startsWith('/api/') ? cleanPath : `/api${cleanPath}`;
+
+  try {
+    const res = await fetch(primary, options);
+    if (res.ok) return res;
+    if (res.status === 404) {
+      const altRes = await fetch(alternate, options);
+      if (altRes.ok) return altRes;
+    }
+    return res;
+  } catch (err) {
+    try {
+      const altRes = await fetch(alternate, options);
+      if (altRes.ok) return altRes;
+    } catch (_) {}
+    throw err;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   fetchPlatformStats();
   fetchCros();
@@ -53,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // 1. Fetch & Update Platform Stats
 async function fetchPlatformStats() {
   try {
-    const res = await fetch('/api/stats');
+    const res = await apiFetch('/stats');
     if (!res.ok) return;
     const stats = await res.json();
     document.getElementById('stat-total').textContent = stats.total_cros;
@@ -74,8 +98,9 @@ async function fetchCros() {
   if (currentFilters.sort_by) params.append('sort_by', currentFilters.sort_by);
 
   try {
-    const res = await fetch(`/api/cros?${params.toString()}`);
-    if (!res.ok) throw new Error('API request failed');
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiFetch(`/cros${queryStr}`);
+    if (!res.ok) throw new Error(`API request failed: ${res.status}`);
     const cros = await res.json();
     cachedCros = cros;
     renderCroGrid(cros);
@@ -454,7 +479,7 @@ async function openCompareModal() {
   }
 
   try {
-    const res = await fetch(`/api/compare?ids=${compareList.join(',')}`);
+    const res = await apiFetch(`/compare?ids=${compareList.join(',')}`);
     if (!res.ok) throw new Error('Failed to load comparison data');
     const data = await res.json();
 
@@ -571,7 +596,7 @@ async function handleRfpSubmit(event) {
   };
 
   try {
-    const res = await fetch('/api/rfp', {
+    const res = await apiFetch('/rfp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -591,7 +616,7 @@ async function handleRfpSubmit(event) {
 // 10. Detail & Review Modal
 async function openDetailModal(croId) {
   try {
-    const res = await fetch(`/api/cros/${croId}`);
+    const res = await apiFetch(`/cros/${croId}`);
     if (!res.ok) throw new Error('Failed to load CRO details');
     const cro = await res.json();
 
